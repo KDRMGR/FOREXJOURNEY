@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx supabase --version)",
+      "Bash(npx supabase link --project-ref pwboorumayizjyvjyvwi)",
+      "Bash(npx supabase login)",
+      "Bash(npm run build)",
+      "Bash(npm install)",
+      "Bash(npx next build)"
+    ]
+  }
+}

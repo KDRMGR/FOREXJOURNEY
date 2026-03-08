@@ -39,13 +39,48 @@ export default function DashboardPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  };
+
   if (isLoading || !user) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <nav className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">
+                TradePro
+              </span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-400">
+                {user.email}
+              </span>
+              <span className="px-3 py-1 bg-blue-600 rounded-full text-xs font-semibold uppercase">
+                {user.subscription_tier}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="text-gray-400 hover:text-white transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold mb-8">Trading Dashboard</h1>
 
         <div className="grid lg:grid-cols-3 gap-8">

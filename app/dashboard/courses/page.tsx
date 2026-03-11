@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -104,7 +105,14 @@ export default function CoursesPage() {
                 accessible ? 'border-gray-700 hover:border-blue-500 cursor-pointer' : 'border-gray-700 opacity-75'
               }`}>
                 {course.thumbnail_url ? (
-                  <img src={course.thumbnail_url} alt={course.title} className="w-full h-40 object-cover" />
+                  <Image
+                    src={course.thumbnail_url}
+                    alt={course.title}
+                    width={800}
+                    height={160}
+                    className="w-full h-40 object-cover"
+                    unoptimized
+                  />
                 ) : (
                   <div className="w-full h-40 bg-gradient-to-br from-blue-900 to-gray-900 flex items-center justify-center">
                     {accessible ? (

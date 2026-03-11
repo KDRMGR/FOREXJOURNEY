@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/store/authStore';
 import { KycSubmission } from '@/lib/types/database';
@@ -198,7 +199,14 @@ function KycForm({ form, setForm, saving, handleFileChange, submit, isResubmit =
             <div className={`border-2 border-dashed rounded-xl p-4 text-center transition ${form[field] ? 'border-green-500 bg-green-500/5' : 'border-gray-600 hover:border-gray-500'}`}>
               {form[field] ? (
                 <div>
-                  <img src={form[field]} alt={label} className="w-full h-20 object-cover rounded-lg mb-2" />
+                  <Image
+                    src={form[field]}
+                    alt={label}
+                    width={320}
+                    height={80}
+                    className="w-full h-20 object-cover rounded-lg mb-2"
+                    unoptimized
+                  />
                   <p className="text-xs text-green-400">Uploaded ✓</p>
                 </div>
               ) : (

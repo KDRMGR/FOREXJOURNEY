@@ -63,6 +63,12 @@ export default function DemoTradingPage() {
     setLoading(false);
   };
 
+  type LeaderboardRow = {
+    user_id: string;
+    profit_loss: number;
+    profiles?: { full_name?: string; email?: string } | { full_name?: string; email?: string }[] | null;
+  };
+
   const fetchLeaderboard = async () => {
     // Get users with their demo trade P&L
     const { data } = await supabase
@@ -71,9 +77,8 @@ export default function DemoTradingPage() {
       .eq('status', 'closed');
     if (data) {
       const map: Record<string, { name: string; pnl: number; trades: number }> = {};
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data.forEach((t: any) => {
-        const profile = Array.isArray(t.profiles) ? t.profiles[0] : t.profiles;
+      (data as LeaderboardRow[]).forEach((t) => {
+        const profile = Array.isArray(t.profiles) ? t.profiles?.[0] : t.profiles;
         if (!map[t.user_id]) map[t.user_id] = { name: profile?.full_name || profile?.email?.split('@')[0] || 'Trader', pnl: 0, trades: 0 };
         map[t.user_id].pnl += t.profit_loss;
         map[t.user_id].trades += 1;

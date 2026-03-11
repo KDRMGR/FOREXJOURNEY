@@ -77,9 +77,18 @@ export default function ProfilePage() {
   const tierBadge = (tier: string) => {
     switch (tier) {
       case 'vip': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'premium': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'basic': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'premium': return 'bg-purple-500/20 text-purple-400 border-purple-500/30'; // Elite
+      case 'basic': return 'bg-blue-500/20 text-blue-400 border-blue-500/30'; // Pro
       default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    }
+  };
+
+  const tierDisplay = (tier: string) => {
+    switch (tier) {
+      case 'basic': return 'Pro';
+      case 'premium': return 'Elite';
+      case 'vip': return 'VIP';
+      default: return tier;
     }
   };
 
@@ -102,7 +111,7 @@ export default function ProfilePage() {
           <div className="text-gray-400 text-sm">{user.email}</div>
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-xs font-semibold uppercase px-2 py-0.5 rounded border ${tierBadge(user.subscription_tier)}`}>
-              {user.subscription_tier}
+              {tierDisplay(user.subscription_tier)}
             </span>
             {user.role === 'admin' && (
               <span className="text-xs font-semibold uppercase px-2 py-0.5 rounded border bg-red-500/20 text-red-400 border-red-500/30">
@@ -200,17 +209,17 @@ export default function ProfilePage() {
           <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
           <h3 className="text-lg font-bold text-white mb-4">Current Plan</h3>
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-semibold uppercase mb-6 ${tierBadge(user.subscription_tier)}`}>
-            {user.subscription_tier}
+            {tierDisplay(user.subscription_tier)}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             {[
-              { tier: 'basic', price: '$49/mo', features: ['10 signals/week', 'Intermediate courses', 'Live charts'] },
-              { tier: 'premium', price: '$99/mo', features: ['Unlimited signals', 'All courses', 'Priority support'] },
-              { tier: 'vip', price: '$299/mo', features: ['Copy trading', '1-on-1 coaching', 'API access'] },
+              { tier: 'basic', label: 'Pro', price: '$49/mo', features: ['10 signals/week', 'Intermediate courses', 'Live charts'] },
+              { tier: 'premium', label: 'Elite', price: '$99/mo', features: ['Unlimited signals', 'All courses', 'Priority support'] },
+              { tier: 'vip', label: 'VIP', price: '$299/mo', features: ['Copy trading', '1-on-1 coaching', 'API access'] },
             ].map((plan) => (
               <div key={plan.tier} className={`p-4 rounded-xl border ${user.subscription_tier === plan.tier ? 'border-blue-500 bg-blue-500/10' : 'border-gray-700 bg-gray-900'}`}>
-                <div className="font-bold text-white uppercase text-sm mb-1">{plan.tier}</div>
+                <div className="font-bold text-white uppercase text-sm mb-1">{plan.label}</div>
                 <div className="text-xl font-bold text-white mb-3">{plan.price}</div>
                 <ul className="space-y-1">
                   {plan.features.map((f) => (
@@ -219,7 +228,10 @@ export default function ProfilePage() {
                 </ul>
                 {user.subscription_tier !== plan.tier && (
                   <button
-                    onClick={() => handleUpgrade(plan.tier)}
+                    onClick={() => {
+                      if (plan.tier === 'vip') window.location.href = '/dashboard/kyc';
+                      else handleUpgrade(plan.tier);
+                    }}
                     disabled={upgradingTier === plan.tier}
                     className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 py-2 rounded-lg text-sm font-semibold transition"
                   >

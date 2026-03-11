@@ -26,6 +26,7 @@ const adminItems = [
   { href: '/admin/courses', label: 'Manage Courses', icon: '◈' },
   { href: '/admin/users',   label: 'Manage Users',   icon: '◉' },
   { href: '/admin/kyc',     label: 'KYC Reviews',    icon: '◎' },
+  { href: '/admin/notifications', label: 'Push Notify', icon: '📢' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

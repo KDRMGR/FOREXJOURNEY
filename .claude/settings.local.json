@@ -6,7 +6,14 @@
       "Bash(npx supabase login)",
       "Bash(npm run build)",
       "Bash(npm install)",
-      "Bash(npx next build)"
+      "Bash(npx next build)",
+      "Bash(gh repo view KDRMGR/FOREXJOURNEY --json name,description,defaultBranchRef,updatedAt)",
+      "Bash(npm install stripe --legacy-peer-deps)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(node -e \"const s = require\\(''stripe''\\); console.log\\(Object.keys\\(s\\)\\)\")",
+      "Bash(npx stripe --version)",
+      "Bash(node -e \"const s = require\\(''stripe''\\); console.log\\(s.API_VERSION\\)\")",
+      "Bash(npm install @anthropic-ai/sdk --legacy-peer-deps)"
     ]
   }
 }

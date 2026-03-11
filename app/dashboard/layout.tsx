@@ -8,17 +8,24 @@ import { supabase } from '@/lib/supabase/client';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 const navItems = [
-  { href: '/dashboard', label: 'Overview', icon: '◈' },
-  { href: '/dashboard/signals', label: 'Signals', icon: '◎' },
-  { href: '/dashboard/courses', label: 'Courses', icon: '◉' },
-  { href: '/dashboard/profile', label: 'Profile', icon: '◐' },
+  { href: '/dashboard',         label: 'Overview',    icon: '◈' },
+  { href: '/dashboard/market',  label: 'Market',      icon: '◎' },
+  { href: '/dashboard/signals', label: 'Signals',     icon: '◇' },
+  { href: '/dashboard/trades',  label: 'My Trades',   icon: '◑' },
+  { href: '/dashboard/demo',    label: 'Demo Trade',  icon: '◆' },
+  { href: '/dashboard/courses', label: 'Courses',     icon: '◉' },
+  { href: '/dashboard/profile', label: 'Profile',     icon: '◐' },
 ];
 
+// KYC only relevant for vip/vvip — shown conditionally in JSX
+const kycItem = { href: '/dashboard/kyc', label: 'KYC Verify', icon: '◎' };
+
 const adminItems = [
-  { href: '/admin', label: 'Admin Overview', icon: '◆' },
+  { href: '/admin',         label: 'Admin Overview', icon: '◆' },
   { href: '/admin/signals', label: 'Manage Signals', icon: '◇' },
   { href: '/admin/courses', label: 'Manage Courses', icon: '◈' },
-  { href: '/admin/users', label: 'Manage Users', icon: '◉' },
+  { href: '/admin/users',   label: 'Manage Users',   icon: '◉' },
+  { href: '/admin/kyc',     label: 'KYC Reviews',    icon: '◎' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -57,7 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Trading</p>
-          {navItems.map((item) => (
+          {[...navItems, ...(['vip', 'vvip'].includes(user.subscription_tier) ? [kycItem] : [])].map((item) => (
             <Link
               key={item.href}
               href={item.href}

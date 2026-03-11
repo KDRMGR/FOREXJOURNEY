@@ -3,16 +3,33 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
-import { Course } from '@/lib/types/database';
+import { useAuthStore } from '@/lib/store/authStore';
+import { Course, SubscriptionTier } from '@/lib/types/database';
+
+// Which tier unlocks each difficulty
+const difficultyRequirement: Record<string, SubscriptionTier> = {
+  beginner: 'free',
+  intermediate: 'basic',
+  advanced: 'premium',
+};
+
+const tierRank: Record<SubscriptionTier, number> = {
+  free: 0, basic: 1, premium: 2, vip: 3, vvip: 4,
+};
+
+const tierLabel: Record<SubscriptionTier, string> = {
+  free: 'Free', basic: 'Basic', premium: 'Premium', vip: 'VIP', vvip: 'VVIP',
+};
 
 export default function CoursesPage() {
+  const { user } = useAuthStore();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
+  const tier = user?.subscription_tier ?? 'free';
+
+  useEffect(() => { fetchCourses(); }, []);
 
   const fetchCourses = async () => {
     const { data } = await supabase
@@ -20,9 +37,13 @@ export default function CoursesPage() {
       .select('*')
       .eq('is_published', true)
       .order('created_at', { ascending: false });
-
     if (data) setCourses(data);
     setLoading(false);
+  };
+
+  const canAccess = (level: string) => {
+    const required = difficultyRequirement[level] ?? 'free';
+    return tierRank[tier] >= tierRank[required];
   };
 
   const filtered = filter === 'all' ? courses : courses.filter((c) => c.difficulty_level === filter);
@@ -41,6 +62,13 @@ export default function CoursesPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Courses</h1>
         <p className="text-gray-400">Master trading with our professional curriculum</p>
+
+        {/* Access legend */}
+        <div className="mt-4 flex flex-wrap gap-3 text-xs text-gray-400">
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500" /> Beginner — Free</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-500" /> Intermediate — Basic+</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500" /> Advanced — Premium+</span>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-8">
@@ -49,9 +77,7 @@ export default function CoursesPage() {
             key={level}
             onClick={() => setFilter(level)}
             className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
-              filter === level
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
+              filter === level ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
             }`}
           >
             {level}
@@ -61,9 +87,7 @@ export default function CoursesPage() {
 
       {loading ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-gray-800 rounded-xl h-64 animate-pulse" />
-          ))}
+          {[...Array(6)].map((_, i) => <div key={i} className="bg-gray-800 rounded-xl h-64 animate-pulse" />)}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
@@ -71,18 +95,25 @@ export default function CoursesPage() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((course) => (
-            <Link key={course.id} href={`/dashboard/courses/${course.id}`}>
-              <div className="bg-gray-800 rounded-xl border border-gray-700 hover:border-blue-500 transition overflow-hidden group cursor-pointer h-full">
+          {filtered.map((course) => {
+            const accessible = canAccess(course.difficulty_level);
+            const required = difficultyRequirement[course.difficulty_level];
+
+            const card = (
+              <div className={`bg-gray-800 rounded-xl border overflow-hidden group h-full transition ${
+                accessible ? 'border-gray-700 hover:border-blue-500 cursor-pointer' : 'border-gray-700 opacity-75'
+              }`}>
                 {course.thumbnail_url ? (
-                  <img
-                    src={course.thumbnail_url}
-                    alt={course.title}
-                    className="w-full h-40 object-cover"
-                  />
+                  <img src={course.thumbnail_url} alt={course.title} className="w-full h-40 object-cover" />
                 ) : (
                   <div className="w-full h-40 bg-gradient-to-br from-blue-900 to-gray-900 flex items-center justify-center">
-                    <span className="text-4xl opacity-30">◉</span>
+                    {accessible ? (
+                      <span className="text-4xl opacity-30">◉</span>
+                    ) : (
+                      <svg className="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    )}
                   </div>
                 )}
                 <div className="p-5">
@@ -94,21 +125,36 @@ export default function CoursesPage() {
                       {course.price === 0 ? 'Free' : `$${course.price}`}
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition mb-1">
+                  <h3 className={`text-lg font-bold mb-1 ${accessible ? 'text-white group-hover:text-blue-400' : 'text-gray-400'} transition`}>
                     {course.title}
                   </h3>
                   {course.description && (
                     <p className="text-sm text-gray-400 line-clamp-2">{course.description}</p>
                   )}
                   <div className="mt-4">
-                    <span className="text-sm font-medium text-blue-400 group-hover:underline">
-                      Start Learning →
-                    </span>
+                    {accessible ? (
+                      <span className="text-sm font-medium text-blue-400 group-hover:underline">
+                        Start Learning →
+                      </span>
+                    ) : (
+                      <span className="text-sm font-medium text-gray-500 flex items-center gap-1.5">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Requires {tierLabel[required]} plan
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
-            </Link>
-          ))}
+            );
+
+            return accessible ? (
+              <Link key={course.id} href={`/dashboard/courses/${course.id}`}>{card}</Link>
+            ) : (
+              <Link key={course.id} href="/dashboard/profile">{card}</Link>
+            );
+          })}
         </div>
       )}
     </div>

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@netlify/plugin-nextjs": "^5.15.8",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/supabase-js": "^2.98.0",
@@ -24,6 +25,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "recharts": "^3.8.0",
+    "stripe": "^20.4.1",
     "tailwindcss": "3.3.3",
     "typescript": "5.2.2",
     "zustand": "^5.0.11"

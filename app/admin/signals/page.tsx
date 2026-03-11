@@ -27,6 +27,53 @@ export default function AdminSignalsPage() {
 
   useEffect(() => { fetchSignals(); }, []);
 
+  const broadcastSignalNotification = async (
+    signalId: string,
+    pair: string,
+    type: string,
+    entry: number,
+    confidence: string,
+    notes: string,
+  ) => {
+    // Fetch all subscribed user IDs (basic, premium, vip)
+    const { data: subscribers } = await supabase
+      .from('profiles')
+      .select('id, subscription_tier, copy_trading_enabled')
+      .in('subscription_tier', ['basic', 'premium', 'vip']);
+
+    if (!subscribers || subscribers.length === 0) return;
+
+    const direction = type === 'buy' ? 'BUY' : 'SELL';
+    const notifications = subscribers.map((s) => ({
+      user_id: s.id,
+      type: 'signal' as const,
+      title: `New Signal: ${pair} ${direction}`,
+      message: `Entry at $${entry.toFixed(2)} — ${confidence} confidence. ${notes || ''}`.trim(),
+      is_read: false,
+    }));
+
+    await supabase.from('notifications').insert(notifications);
+
+    // Copy trading: auto-create a trade (quantity = 0.01 default) for VIP users with copy_trading_enabled
+    const copyUsers = subscribers.filter(
+      (s) => s.subscription_tier === 'vip' && s.copy_trading_enabled,
+    );
+
+    if (copyUsers.length > 0) {
+      const copyTrades = copyUsers.map((s) => ({
+        user_id: s.id,
+        signal_id: signalId,
+        pair,
+        trade_type: type,
+        entry_price: entry,
+        quantity: 0.01,
+        profit_loss: 0,
+        status: 'open',
+      }));
+      await supabase.from('user_trades').insert(copyTrades);
+    }
+  };
+
   const fetchSignals = async () => {
     const { data } = await supabase
       .from('trading_signals')
@@ -60,7 +107,27 @@ export default function AdminSignalsPage() {
     if (err) {
       setError(err.message);
     } else {
-      setSuccess('Signal published successfully!');
+      // Broadcast notification to all subscribers (basic, premium, vip)
+      // Need the inserted signal's id — fetch the latest one for this pair/entry
+      const { data: inserted } = await supabase
+        .from('trading_signals')
+        .select('id')
+        .eq('pair', form.pair)
+        .eq('entry_price', parseFloat(form.entry_price))
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      await broadcastSignalNotification(
+        inserted?.id ?? '',
+        form.pair,
+        form.signal_type,
+        parseFloat(form.entry_price),
+        form.confidence_level,
+        form.notes,
+      );
+      setSuccess('Signal published and notifications sent!');
       setForm(emptyForm);
       fetchSignals();
       setTimeout(() => setSuccess(''), 4000);

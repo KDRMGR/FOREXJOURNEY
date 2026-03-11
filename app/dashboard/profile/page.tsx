@@ -12,6 +12,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'api' | 'subscription'>('profile');
+  const [upgradingTier, setUpgradingTier] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -36,6 +37,20 @@ export default function ProfilePage() {
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleUpgrade = async (tier: string) => {
+    if (!user) return;
+    setUpgradingTier(tier);
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier, userId: user.id, userEmail: user.email }),
+    });
+    const { url, error } = await res.json();
+    setUpgradingTier(null);
+    if (url) window.location.href = url;
+    else console.error('Checkout error:', error);
   };
 
   const saveApiKeys = async () => {
@@ -180,7 +195,9 @@ export default function ProfilePage() {
       )}
 
       {activeTab === 'subscription' && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
+        <div className="space-y-6">
+          {user.subscription_tier === 'vip' && <CopyTradingToggle userId={user.id} />}
+          <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
           <h3 className="text-lg font-bold text-white mb-4">Current Plan</h3>
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-semibold uppercase mb-6 ${tierBadge(user.subscription_tier)}`}>
             {user.subscription_tier}
@@ -201,15 +218,63 @@ export default function ProfilePage() {
                   ))}
                 </ul>
                 {user.subscription_tier !== plan.tier && (
-                  <button className="mt-4 w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg text-sm font-semibold transition">
-                    Upgrade
+                  <button
+                    onClick={() => handleUpgrade(plan.tier)}
+                    disabled={upgradingTier === plan.tier}
+                    className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 py-2 rounded-lg text-sm font-semibold transition"
+                  >
+                    {upgradingTier === plan.tier ? 'Redirecting...' : 'Upgrade'}
                   </button>
                 )}
               </div>
             ))}
           </div>
         </div>
+        </div>
       )}
+    </div>
+  );
+}
+
+function CopyTradingToggle({ userId }: { userId: string }) {
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from('profiles')
+      .select('copy_trading_enabled')
+      .eq('id', userId)
+      .single()
+      .then(({ data }) => setEnabled(data?.copy_trading_enabled ?? false));
+  }, [userId]);
+
+  const toggle = async () => {
+    if (enabled === null) return;
+    setSaving(true);
+    const next = !enabled;
+    await supabase.from('profiles').update({ copy_trading_enabled: next }).eq('id', userId);
+    setEnabled(next);
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-5 flex items-center justify-between">
+      <div>
+        <p className="font-bold text-yellow-400">Copy Trading</p>
+        <p className="text-sm text-gray-400 mt-0.5">
+          Automatically mirror new admin signals into your trade history
+        </p>
+      </div>
+      <button
+        onClick={toggle}
+        disabled={saving || enabled === null}
+        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+          enabled ? 'bg-yellow-500' : 'bg-gray-600'
+        } disabled:opacity-50`}
+      >
+        <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+      </button>
     </div>
   );
 }

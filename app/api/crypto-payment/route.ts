@@ -4,11 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 // Docs: https://www.blockchain.com/api/api_receive
 // Requires: BLOCKCHAIN_API_KEY + BLOCKCHAIN_XPUB_BTC (or ETH)
 
-const BLOCKCHAIN_API_KEY = process.env.BLOCKCHAIN_API_KEY!;
-const XPUB_BTC = process.env.BLOCKCHAIN_XPUB_BTC!;
-const XPUB_ETH = process.env.BLOCKCHAIN_XPUB_ETH!;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
-
 const TIER_PRICES_USD: Record<string, number> = {
   basic: 49,
   premium: 99,
@@ -23,6 +18,15 @@ export async function POST(req: NextRequest) {
   if (!priceUsd) {
     return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
   }
+
+  const BLOCKCHAIN_API_KEY = process.env.BLOCKCHAIN_API_KEY;
+  const XPUB_BTC = process.env.BLOCKCHAIN_XPUB_BTC;
+  const XPUB_ETH = process.env.BLOCKCHAIN_XPUB_ETH;
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+  if (!BLOCKCHAIN_API_KEY || !XPUB_BTC || !XPUB_ETH || !process.env.CRYPTO_WEBHOOK_SECRET) {
+    return NextResponse.json({ error: 'Crypto gateway not configured' }, { status: 503 });
+    }
 
   const xpub = currency === 'ETH' ? XPUB_ETH : XPUB_BTC;
   const callbackUrl = encodeURIComponent(

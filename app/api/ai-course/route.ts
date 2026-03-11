@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 export async function POST(req: NextRequest) {
   const { topic, level, type } = await req.json();
   // type: 'course_outline' | 'lesson_content' | 'quiz'
@@ -54,6 +52,11 @@ Make questions practical and test real understanding, not just memorization.`;
   }
 
   try {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ error: 'AI not configured' }, { status: 503 });
+    }
+    const client = new Anthropic({ apiKey });
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,

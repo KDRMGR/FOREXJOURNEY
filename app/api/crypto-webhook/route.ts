@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 // Blockchain.com calls this URL when payment is confirmed
 // It passes: value (satoshis/wei), confirmations, transaction_hash
 export async function GET(req: NextRequest) {
@@ -28,6 +23,13 @@ export async function GET(req: NextRequest) {
   if (!userId || !tier) {
     return new NextResponse('*ok*');
   }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRole) {
+    return new NextResponse('*ok*');
+  }
+  const supabaseAdmin = createClient(supabaseUrl, serviceRole);
 
   // Upgrade user subscription
   await supabaseAdmin

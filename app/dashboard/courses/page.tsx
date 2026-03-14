@@ -105,14 +105,16 @@ export default function CoursesPage() {
                 accessible ? 'border-gray-700 hover:border-blue-500 cursor-pointer' : 'border-gray-700 opacity-75'
               }`}>
                 {course.thumbnail_url ? (
-                  <Image
-                    src={course.thumbnail_url}
-                    alt={course.title}
-                    width={800}
-                    height={160}
-                    className="w-full h-40 object-cover"
-                    unoptimized
-                  />
+                  <div className="relative w-full h-40">
+                    <Image
+                      src={course.thumbnail_url}
+                      alt={course.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
                 ) : (
                   <div className="w-full h-40 bg-gradient-to-br from-blue-900 to-gray-900 flex items-center justify-center">
                     {accessible ? (

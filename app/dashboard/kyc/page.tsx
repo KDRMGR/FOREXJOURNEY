@@ -199,14 +199,16 @@ function KycForm({ form, setForm, saving, handleFileChange, submit, isResubmit =
             <div className={`border-2 border-dashed rounded-xl p-4 text-center transition ${form[field] ? 'border-green-500 bg-green-500/5' : 'border-gray-600 hover:border-gray-500'}`}>
               {form[field] ? (
                 <div>
-                  <Image
-                    src={form[field]}
-                    alt={label}
-                    width={320}
-                    height={80}
-                    className="w-full h-20 object-cover rounded-lg mb-2"
-                    unoptimized
-                  />
+                  <div className="relative w-full h-20 rounded-lg overflow-hidden mb-2">
+                    <Image
+                      src={form[field]}
+                      alt={label}
+                      fill
+                      sizes="200px"
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
                   <p className="text-xs text-green-400">Uploaded ✓</p>
                 </div>
               ) : (
